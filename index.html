@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weekly Planner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fdf6e3;
+      color: #333;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #a34a00;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+      max-width: 1200px;
+    }
+    th, td {
+      border: 1px solid #a34a00;
+      padding: 10px;
+      vertical-align: top;
+    }
+    th {
+      background-color: #ffcc80;
+      color: #000;
+    }
+    input, textarea {
+      width: 100%;
+      border: none;
+      padding: 5px;
+      background: #fff7e6;
+      resize: none;
+      font-size: 14px;
+    }
+    button {
+      background-color: #a34a00;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #ff6f00;
+    }
+  </style>
+</head>
+<body>
+  <h1>Weekly Planner</h1>
+  <div>
+    <button onclick="changeWeek(-1)">Previous Week</button>
+    <button onclick="changeWeek(1)">Next Week</button>
+  </div>
+  <div id="planner"></div>
+
+  <script>
+    const startDate = new Date('2025-04-21');
+    let currentWeekOffset = 0;
+
+    function getWeekDates(offset) {
+      const weekStart = new Date(startDate);
+      weekStart.setDate(weekStart.getDate() + offset * 7);
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + i);
+        return d;
+      });
+    }
+
+    function saveWeekData(weekKey, data) {
+      localStorage.setItem(weekKey, JSON.stringify(data));
+    }
+
+    function loadWeekData(weekKey) {
+      const data = localStorage.getItem(weekKey);
+      return data ? JSON.parse(data) : [[], [], []];
+    }
+
+    function renderPlanner() {
+      const weekDates = getWeekDates(currentWeekOffset);
+      const weekKey = `week-${currentWeekOffset}`;
+      const savedData = loadWeekData(weekKey);
+      const headers = weekDates.map(d => `${d.toDateString().split(' ')[0]}<br>${d.toLocaleDateString()}`);
+
+      const table = document.createElement('table');
+      const headerRow = document.createElement('tr');
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.innerHTML = h;
+        headerRow.appendChild(th);
+      });
+      table.appendChild(headerRow);
+
+      const sections = ['Tasks', 'Goals', 'Gratitude'];
+      sections.forEach((section, rowIndex) => {
+        const row = document.createElement('tr');
+        for (let col = 0; col < 7; col++) {
+          const td = document.createElement('td');
+          const textarea = document.createElement('textarea');
+          textarea.placeholder = section;
+          textarea.value = savedData[rowIndex][col] || '';
+          textarea.onchange = () => {
+            savedData[rowIndex][col] = textarea.value;
+            saveWeekData(weekKey, savedData);
+          };
+          td.appendChild(textarea);
+          row.appendChild(td);
+        }
+        table.appendChild(row);
+      });
+
+      document.getElementById('planner').innerHTML = '';
+      document.getElementById('planner').appendChild(table);
+    }
+
+    function changeWeek(direction) {
+      currentWeekOffset += direction;
+      renderPlanner();
+    }
+
+    renderPlanner();
+  </script>
+</body>
+</html>
